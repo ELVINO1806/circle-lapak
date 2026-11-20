@@ -58,10 +58,16 @@ Public URL: **https://mint-safety-verdict.fly.dev** (Fly.io app
 Deployed via the Machines API with the public `node:22` image; the machine
 boots by cloning this repo, running `npm ci`, and starting the server
 (`fly-deploy.py` in this repo reproduces the launch; `fly.toml` documents the
-equivalent flyctl config). Currently running in **testnet** mode with the
-test seller wallet. Verified from outside: `/health` 200, `/openapi.json`
-200, unpaid routes 402, paid self-pay flow 200 on both paid routes, and the
-first settlement batch credited the seller 0.051 testnet USDC.
+equivalent flyctl config). **Running in MAINNET mode** since 21 Nov 2026
+with the owner's dedicated payout wallet
+`0x71e921baabf0063f24af7c563dbd4bb7cbde9f8a` (machine `msv-main`; the
+testnet machine was destroyed after the switch). Verified from outside:
+/health shows network=mainnet, /openapi.json 200, unpaid routes return 402
+with mainnet payment requirements (Base etc.) and payTo = payout wallet.
+Testnet phase proof (same URL, before the switch): paid self-pay flow 200
+on both paid routes, first settlement batch credited the seller 0.051
+testnet USDC. Marketplace form submission is the only remaining step and
+waits for the owner's explicit EKSEKUSI.
 
 ## Status (21 Nov 2026)
 

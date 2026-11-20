@@ -1,4 +1,12 @@
-# Runbook: Switch ke Mainnet (siap jalan, menunggu alamat lapak + EKSEKUSI)
+# Runbook: Switch ke Mainnet (SELESAI 21 Nov 2026 ±01:21 WIB)
+
+STATUS: TUNTAS. Machine `msv-main` (d89546dfe02548) live dengan
+CIRCLE_NETWORK=mainnet + SELLER_ADDRESS=0x71e921baabf0063f24af7c563dbd4bb7cbde9f8a
+(wallet lapak buatan Sutan, terverifikasi EOA segar nonce 0 di Base/BSC/ETH).
+Verifikasi luar: /health network=mainnet 3x konsisten, /openapi.json 200,
+unpaid /check 402 payTo=lapak amount 1000 jaringan mainnet saja, /verdict 402.
+Machine testnet msv-2 sudah dihancurkan. Sisa satu-satunya: kirim formulir
+listing atas EKSEKUSI Sutan (lihat SUBMISSION_DRAFT.md).
 
 Status persiapan (21 Nov 2026):
 - Mode mainnet SUDAH diverifikasi lokal: server dengan `CIRCLE_NETWORK=mainnet`

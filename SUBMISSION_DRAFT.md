@@ -11,8 +11,8 @@ Isi formulir yang diminta dokumen resmi: endpoint URL, alamat wallet payout, des
 - **Provider name:** elvinojr
 - **Category:** FINANCIAL_ANALYSIS
 - **Tags:** bsc, bnb-chain, agent-id, mint, security, sourcify, contract-verification, risk
-- **Endpoint base URL:** https://mint-safety-verdict.fly.dev (LIVE sejak 21 Nov 2026 ±01:06 WIB, Fly.io app `mint-safety-verdict`, region sin, masih mode TESTNET dengan wallet seller uji)
-- **Payout wallet address:** `<WALLET LAPAK MAINNET — menunggu Sutan buat sendiri>` (sementara uji testnet: 0x79d8E04dB4cb31F6dA2F02f6AdB4FB38e0A8AA54)
+- **Endpoint base URL:** https://mint-safety-verdict.fly.dev (LIVE, Fly.io app `mint-safety-verdict`, region sin, mode **MAINNET** sejak 21 Nov 2026 ±01:21 WIB, machine msv-main)
+- **Payout wallet address:** 0x71e921baabf0063f24af7c563dbd4bb7cbde9f8a (wallet lapak mainnet buatan Sutan sendiri 21 Nov 2026, self-custody; terverifikasi EOA segar nonce 0 di Base/BSC/Ethereum)
 - **OpenAPI spec URL:** https://mint-safety-verdict.fly.dev/openapi.json
 - **Website/docs:** `<URL PUBLIK>/health` + repo/README (menyesuaikan hosting)
 
@@ -44,7 +44,7 @@ Mint Safety Verdict is a pay-per-call API that returns a pre-mint safety verdict
 - [x] Hosting publik 24/7 live + /health 200 dari luar (Fly.io, 21 Nov 2026)
 - [x] OpenAPI spec URL publik bisa diakses
 - [x] Uji bayar-sendiri di URL publik lolos (HTTP 200 dua rute; settlement batch pertama masuk ke seller 0,051 USDC testnet)
-- [ ] Wallet lapak mainnet dibuat Sutan (self-custody), alamatnya dipasang sebagai SELLER_ADDRESS
-- [ ] Server jalan mode mainnet (CIRCLE_NETWORK=mainnet) + uji 402 mainnet
-- [ ] Uji bayar-sendiri mainnet nominal terkecil (butuh USDC mainnet kecil — keputusan Sutan)
+- [x] Wallet lapak mainnet dibuat Sutan (self-custody), alamatnya dipasang sebagai SELLER_ADDRESS
+- [x] Server jalan mode mainnet (CIRCLE_NETWORK=mainnet) + uji 402 mainnet dari luar (payTo = wallet lapak, Base mainnet, tanpa testnet)
+- [ ] Uji bayar-sendiri mainnet nominal terkecil (opsional — butuh USDC asli, keputusan Sutan)
 - [ ] EKSEKUSI Sutan untuk mengirim formulir
