@@ -1,11 +1,35 @@
 // Mint Safety Verdict — gate engine, adapted from GateRadar v1 (~/workspace/gateradar/radar/radar.mjs).
-// Read-only checks for a single BSC (chain 56) contract address.
+// Read-only checks for a single contract address on a supported EVM chain.
+// v0.2: multi-chain — BSC 56 (home of the Agent ID specialty), Base 8453,
+// Ethereum 1, Arbitrum 42161, Polygon 137. The Agent ID gate and the
+// AgenticMint radar only exist on BSC; on other chains the gate is reported
+// UNKNOWN with that reason and never influences the verdict.
 // Honesty rule carried over from GateRadar: a gate only says PASS when its check
 // actually ran and passed; gates that cannot be automated generically stay UNKNOWN.
 
-const REGISTRY = "60b9262456de011f7d15a54cdd8c48baaa8b022f"; // official Agent ID registry (no 0x, as in source text)
-const RPC = "https://bsc-dataseed.binance.org";
+const REGISTRY = "60b9262456de011f7d15a54cdd8c48baaa8b022f"; // official Agent ID registry on BSC (no 0x, as in source text)
 const AGENTICMINT_STATE = "https://agenticmint.ai/api/state";
+
+export const CHAINS = {
+  56: { name: "BNB Smart Chain", rpcs: ["https://bsc-dataseed.binance.org", "https://bsc-dataseed1.defibit.io"] },
+  8453: { name: "Base", rpcs: ["https://mainnet.base.org", "https://base-rpc.publicnode.com"] },
+  1: { name: "Ethereum", rpcs: ["https://ethereum-rpc.publicnode.com", "https://eth.llamarpc.com"] },
+  42161: { name: "Arbitrum One", rpcs: ["https://arb1.arbitrum.io/rpc", "https://arbitrum-one-rpc.publicnode.com"] },
+  137: { name: "Polygon PoS", rpcs: ["https://polygon-rpc.com", "https://polygon-bor-rpc.publicnode.com"] },
+};
+
+export function isSupportedChain(chainId) {
+  return Object.prototype.hasOwnProperty.call(CHAINS, chainId);
+}
+
+// Accepts undefined (default 56), a number, or a numeric string. Returns the
+// chain id, or null when the value is present but not a supported chain.
+export function parseChain(input) {
+  if (input === undefined || input === null || input === "") return 56;
+  const n = Number(input);
+  if (!Number.isInteger(n)) return null;
+  return isSupportedChain(n) ? n : null;
+}
 
 async function jget(url, ms = 20000) {
   const c = new AbortController();
@@ -19,26 +43,29 @@ async function jget(url, ms = 20000) {
   } finally { clearTimeout(t); }
 }
 
-async function ethCall(to, data) {
-  try {
-    const res = await fetch(RPC, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_call", params: [{ to, data }, "latest"] }),
-    });
-    const body = await res.json();
-    if (body.result && body.result !== "0x") return BigInt(body.result);
-    return null;
-  } catch { return null; }
+async function ethCall(to, data, chainId) {
+  for (const rpc of CHAINS[chainId].rpcs) {
+    try {
+      const res = await fetch(rpc, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_call", params: [{ to, data }, "latest"] }),
+      });
+      const body = await res.json();
+      if (body.result && body.result !== "0x") return BigInt(body.result);
+      if (body.result === "0x") return null; // call succeeded, empty return
+    } catch { /* try next RPC */ }
+  }
+  return null;
 }
 
 // Sourcify: use the RAW endpoint without ?fields= for the match verdict
 // (the ?fields= variants are known to return misleading null match values).
-async function sourcify(addr) {
-  return jget(`https://sourcify.dev/server/v2/contract/56/${addr}`);
+async function sourcify(addr, chainId) {
+  return jget(`https://sourcify.dev/server/v2/contract/${chainId}/${addr}`);
 }
-async function sourcifySources(addr) {
-  return jget(`https://sourcify.dev/server/v2/contract/56/${addr}?fields=sources`);
+async function sourcifySources(addr, chainId) {
+  return jget(`https://sourcify.dev/server/v2/contract/${chainId}/${addr}?fields=sources`);
 }
 
 const RISK_PATTERNS = [
@@ -53,8 +80,8 @@ export function isValidAddress(addr) {
   return typeof addr === "string" && /^0x[0-9a-fA-F]{40}$/.test(addr);
 }
 
-async function verifiedAndSource(addr) {
-  const sc = await sourcify(addr);
+async function verifiedAndSource(addr, chainId) {
+  const sc = await sourcify(addr, chainId);
   const match = sc?.match ?? sc?.creationMatch ?? null;
   let verified;
   if (match === "exact_match") verified = { status: "PASS", reason: "Sourcify exact_match" };
@@ -64,7 +91,7 @@ async function verifiedAndSource(addr) {
 
   let sourceText = "";
   if (verified.status === "PASS" || verified.status === "WARNING") {
-    const src = await sourcifySources(addr);
+    const src = await sourcifySources(addr, chainId);
     const files = src?.sources ?? {};
     sourceText = Object.values(files).map(f => f?.content ?? "").join("\n");
   }
@@ -80,7 +107,7 @@ function scanSource(sourceText) {
   return { status: "PASS", reason: "No dangerous patterns from the v1 scan list found in verified source" };
 }
 
-// Optional radar context: is this address currently on the AgenticMint radar?
+// Optional radar context (BSC only): is this address on the AgenticMint radar?
 let radarCache = { at: 0, byAddr: new Map() };
 async function radarLookup(addr) {
   const now = Date.now();
@@ -100,34 +127,37 @@ async function radarLookup(addr) {
 }
 
 // Basic check ($0.001 tier): verification status + dangerous-pattern scan only.
-export async function basicCheck(addr) {
-  const { verified, sourceText, match } = await verifiedAndSource(addr);
+export async function basicCheck(addr, chainId = 56) {
+  const { verified, sourceText, match } = await verifiedAndSource(addr, chainId);
   const clean = scanSource(sourceText);
   return {
     address: addr,
-    chain: 56,
-    chain_name: "BNB Smart Chain",
+    chain: chainId,
+    chain_name: CHAINS[chainId].name,
     verified: { status: verified.status, sourcify_match: match, reason: verified.reason },
     clean_source: clean,
     checked_at: new Date().toISOString(),
-    note: "Basic tier: Sourcify verification + dangerous-pattern scan of verified source only. Full mint verdict: POST /verdict.",
+    note: "Basic tier: Sourcify verification + dangerous-pattern scan of verified source only. Full verdict: POST /verdict.",
   };
 }
 
 // Full verdict ($0.05 tier): every automatable GateRadar gate for one address.
-export async function fullVerdict(addr) {
+export async function fullVerdict(addr, chainId = 56) {
+  const isBsc = chainId === 56;
   const gates = {};
   gates.official_channel = { status: "UNKNOWN", reason: "Needs project-site mapping; not generically automatable. Check the project's official site names this contract before minting." };
 
-  const { verified, sourceText } = await verifiedAndSource(addr);
+  const { verified, sourceText } = await verifiedAndSource(addr, chainId);
   gates.verified = verified;
   gates.clean_source = scanSource(sourceText);
 
   gates.price_quote = { status: "UNKNOWN", reason: "Per-project mint quote is not generically automatable; verify the live quote is 0 (or the exact fee) in your wallet before signing." };
   gates.simulation = { status: "UNKNOWN", reason: "Simulation runs at action time with the buyer's own wallet preview." };
 
-  const radar = await radarLookup(addr).catch(() => null);
-  if (sourceText && sourceText.toLowerCase().includes(REGISTRY)) {
+  const radar = isBsc ? await radarLookup(addr).catch(() => null) : null;
+  if (!isBsc) {
+    gates.agent_id_gate = { status: "UNKNOWN", reason: `Agent ID gate exists only on BNB Smart Chain (56); not applicable to ${CHAINS[chainId].name} (${chainId})` };
+  } else if (sourceText && sourceText.toLowerCase().includes(REGISTRY)) {
     gates.agent_id_gate = { status: "PASS", reason: "Verified source references the official Agent ID registry address" };
   } else if (radar?.gated === true) {
     gates.agent_id_gate = { status: "WARNING", reason: "AgenticMint marks it Agent-ID gated, but registry reference not found in verified source (or no source)" };
@@ -135,8 +165,8 @@ export async function fullVerdict(addr) {
     gates.agent_id_gate = { status: "FAIL", reason: "No Agent ID gate evidence" };
   }
 
-  const ts = await ethCall(addr, "0x18160ddd"); // totalSupply()
-  const ms1 = await ethCall(addr, "0xd5abeb01"); // maxSupply() (non-standard, may not exist)
+  const ts = await ethCall(addr, "0x18160ddd", chainId); // totalSupply()
+  const ms1 = await ethCall(addr, "0xd5abeb01", chainId); // maxSupply() (non-standard, may not exist)
   if (ts !== null) {
     gates.supply = { status: "PASS", reason: `totalSupply on-chain = ${ts.toString()}${ms1 !== null ? `, maxSupply = ${ms1.toString()}` : ""}`, total_supply: ts.toString(), max_supply: ms1 !== null ? ms1.toString() : null };
   } else {
@@ -144,13 +174,14 @@ export async function fullVerdict(addr) {
   }
 
   let verdict = "WARNING";
-  if (gates.verified.status === "FAIL" || gates.clean_source.status === "FAIL" || gates.agent_id_gate.status === "FAIL") verdict = "REJECT";
+  const hardFail = gates.verified.status === "FAIL" || gates.clean_source.status === "FAIL" || (isBsc && gates.agent_id_gate.status === "FAIL");
+  if (hardFail) verdict = "REJECT";
   else if (Object.values(gates).every(g => g.status === "PASS")) verdict = "PASS";
 
   return {
     address: addr,
-    chain: 56,
-    chain_name: "BNB Smart Chain",
+    chain: chainId,
+    chain_name: CHAINS[chainId].name,
     name: radar?.name ?? radar?.rewards?.[0]?.symbol ?? null,
     radar: radar ? {
       listed: true,
@@ -158,11 +189,13 @@ export async function fullVerdict(addr) {
       score: radar.score ?? null,
       unique_minters: radar.uniq ?? null,
       first_seen: radar.at ? new Date(radar.at).toISOString() : null,
-    } : { listed: false },
+    } : { listed: false, ...(isBsc ? {} : { note: "AgenticMint radar covers BNB Smart Chain only" }) },
     gates,
     verdict,
     verdict_explainer: verdict === "REJECT"
-      ? "At least one hard gate FAILED (verified / clean_source / agent_id_gate). Do not mint."
+      ? (isBsc
+        ? "At least one hard gate FAILED (verified / clean_source / agent_id_gate). Do not mint."
+        : "At least one hard gate FAILED (verified / clean_source). Do not mint.")
       : verdict === "PASS"
         ? "Every gate passed."
         : "No hard FAIL, but one or more gates are UNKNOWN/WARNING. Complete the UNKNOWN checks manually before minting.",

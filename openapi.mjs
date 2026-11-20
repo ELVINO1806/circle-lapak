@@ -5,41 +5,44 @@ export const openapi = {
   openapi: "3.0.3",
   info: {
     title: "Mint Safety Verdict",
-    version: "0.1.0",
+    version: "0.2.0",
     description:
-      "Pre-mint safety verdicts for BNB Smart Chain (chain 56) contracts, specialised in Binance Agent ID gated mints. " +
-      "Basic tier returns Sourcify verification status plus a dangerous-pattern scan of the verified source. " +
-      "Full verdict runs every automatable gate: verification, source scan, Agent ID gate evidence, on-chain supply, " +
-      "plus AgenticMint radar context (score, unique minters, first seen). Gates that cannot be automated are reported " +
+      "Token safety check and pre-mint safety verdict for smart contracts on BNB Smart Chain (56), Base (8453), " +
+      "Ethereum (1), Arbitrum (42161) and Polygon (137), specialised in Binance Agent ID gated mints on BSC. " +
+      "Basic tier returns Sourcify contract verification status plus a dangerous-pattern scan of the verified source " +
+      "(delegatecall, selfdestruct, tx.origin, owner withdrawal, forced setApprovalForAll). " +
+      "Full verdict runs every automatable gate: verification, source scan, Agent ID gate evidence (BSC only), on-chain supply, " +
+      "plus AgenticMint radar context on BSC (score, unique minters, first seen). Gates that cannot be automated are reported " +
       "as UNKNOWN, never faked as PASS. Payments in USDC via x402 (Circle Gateway nanopayments + vanilla x402).",
   },
-  servers: [{ url: "http://localhost:8402", description: "testnet build (host replaced at public deploy)" }],
+  servers: [{ url: "https://mint-safety-verdict.fly.dev", description: "Production (mainnet payments)" }],
   paths: {
     "/check": {
       get: {
-        summary: "Basic contract check — is it verified and is the source clean?",
+        summary: "Basic token safety check — is the contract verified and is the source clean?",
         description: "Price: $0.001 USDC per call, paid via x402. Unpaid requests receive 402 Payment Required.",
         parameters: [
-          { name: "address", in: "query", required: true, schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" }, description: "BSC contract address (chain 56)." },
+          { name: "address", in: "query", required: true, schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" }, description: "Contract address on the selected chain." },
+          { name: "chain", in: "query", required: false, schema: { type: "integer", enum: [56, 8453, 1, 42161, 137], default: 56 }, description: "Chain id: 56 BNB Smart Chain (default), 8453 Base, 1 Ethereum, 42161 Arbitrum, 137 Polygon." },
         ],
         responses: {
           "200": { description: "Basic check result", content: { "application/json": { schema: { $ref: "#/components/schemas/BasicCheck" } } } },
-          "400": { description: "Invalid address" },
+          "400": { description: "Invalid address or unsupported chain" },
           "402": { description: "Payment required (x402)" },
         },
       },
     },
     "/verdict": {
       post: {
-        summary: "Full mint safety verdict for one BSC contract",
+        summary: "Full mint safety verdict for one contract on a supported chain",
         description: "Price: $0.05 USDC per call, paid via x402. Unpaid requests receive 402 Payment Required.",
         requestBody: {
           required: true,
-          content: { "application/json": { schema: { type: "object", required: ["address"], properties: { address: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$", description: "BSC contract address (chain 56)." } } } } },
+          content: { "application/json": { schema: { type: "object", required: ["address"], properties: { address: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$", description: "Contract address on the selected chain." }, chain: { type: "integer", enum: [56, 8453, 1, 42161, 137], default: 56, description: "Chain id (default 56). The Agent ID gate and radar context apply to BSC (56) only." } } } } },
         },
         responses: {
           "200": { description: "Full verdict", content: { "application/json": { schema: { $ref: "#/components/schemas/Verdict" } } } },
-          "400": { description: "Invalid address" },
+          "400": { description: "Invalid address or unsupported chain" },
           "402": { description: "Payment required (x402)" },
         },
       },
