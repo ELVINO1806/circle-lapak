@@ -44,7 +44,8 @@ def call(method, url, payload=None, timeout=60):
 
 BOOT = (
     "mkdir -p /srv/app && cd /srv/app && "
-    "git clone --depth 1 https://github.com/ELVINO1806/circle-lapak.git . && "
+    "if [ -d .git ]; then git fetch --depth 1 origin master && git reset --hard origin/master; "
+    "else git clone --depth 1 https://github.com/ELVINO1806/circle-lapak.git .; fi && "
     "npm ci --omit=dev --no-audit --no-fund && exec node server.mjs"
 )
 
@@ -91,12 +92,18 @@ MACHINE = {
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     if cmd == "create":
+        if len(sys.argv) > 2:
+            MACHINE["name"] = sys.argv[2]
         print(json.dumps(call("POST", BASE, MACHINE, timeout=120), indent=2))
     elif cmd == "list":
         print(json.dumps(call("GET", BASE), indent=2))
     elif cmd == "wait":
-        url = f"{BASE}/{sys.argv[2]}/wait?state=started&timeout=180"
-        print(json.dumps(call("GET", url, timeout=200), indent=2))
+        url = f"{BASE}/{sys.argv[2]}/wait?state=started&timeout=60"
+        print(json.dumps(call("GET", url, timeout=90), indent=2))
+    elif cmd == "restart":
+        print(json.dumps(call("POST", f"{BASE}/{sys.argv[2]}/restart", {}, timeout=120), indent=2))
+    elif cmd == "destroy":
+        print(json.dumps(call("DELETE", f"{BASE}/{sys.argv[2]}?force=true", timeout=120), indent=2))
     else:
         print(__doc__)
         sys.exit(2)

@@ -35,6 +35,24 @@ const gateway = createGatewayMiddleware({ sellerAddress, facilitatorUrl });
 const app = express();
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.json({
+    service: "Mint Safety Verdict",
+    provider: "elvinojr",
+    description: "Pay-per-call pre-mint safety verdicts for BNB Smart Chain (chain 56) contracts, specialised in Binance Agent ID gated mints. Payments in USDC via x402 (Circle Gateway nanopayments).",
+    network: networkMode,
+    endpoints: {
+      "GET /check?address=0x...": { price_usdc: 0.001, returns: "Sourcify verification status + dangerous-pattern scan of verified source" },
+      "POST /verdict": { price_usdc: 0.05, body: { address: "0x..." }, returns: "Full gate verdict (verified, clean_source, agent_id_gate, supply, radar context). Gates that cannot be automated are reported as UNKNOWN, never PASS." },
+      "GET /openapi.json": { price_usdc: 0, returns: "OpenAPI 3 spec" },
+      "GET /health": { price_usdc: 0, returns: "Service status" },
+    },
+    analysis_chain: "BNB Smart Chain (56)",
+    payment_asset: "USDC via Circle Gateway (x402)",
+    seller: sellerAddress,
+  });
+});
+
 app.get("/health", (req, res) => {
   res.json({ ok: true, service: "mint-safety-verdict", network: networkMode, seller: sellerAddress, checked_at: new Date().toISOString() });
 });
