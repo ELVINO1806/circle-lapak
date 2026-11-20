@@ -51,6 +51,18 @@ Exit code 2 with `NEED_FAUCET` means the buyer wallet is unfunded.
 - `openapi.mjs` — the spec served at `/openapi.json`
 - `buyer-test.mjs` — end-to-end self-pay test client
 
+## Hosting (live)
+
+Public URL: **https://mint-safety-verdict.fly.dev** (Fly.io app
+`mint-safety-verdict`, org Kevindo Advertise, region sin, machine `msv-1`).
+Deployed via the Machines API with the public `node:22` image; the machine
+boots by cloning this repo, running `npm ci`, and starting the server
+(`fly-deploy.py` in this repo reproduces the launch; `fly.toml` documents the
+equivalent flyctl config). Currently running in **testnet** mode with the
+test seller wallet. Verified from outside: `/health` 200, `/openapi.json`
+200, unpaid routes 402, paid self-pay flow 200 on both paid routes, and the
+first settlement batch credited the seller 0.051 testnet USDC.
+
 ## Status (21 Nov 2026)
 
 - Local build verified: `/health` 200, `/openapi.json` 200, unpaid `/check`
