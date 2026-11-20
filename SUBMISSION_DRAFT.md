@@ -1,6 +1,11 @@
-# Paket Submission — Circle Agent Marketplace (DRAF, belum dikirim)
+# Paket Submission — Circle Agent Marketplace
 
-Status: DRAF. Pengiriman formulir menunggu EKSEKUSI Sutan.
+Status: **TERKIRIM 21 Nov 2026 ±01:25 WIB** atas kata "gas" Sutan (diambil sebagai persetujuan eksekusi).
+Konfirmasi Google Forms: "Your response has been recorded." — tanpa nomor referensi.
+Dikirim dalam keadaan login ariandikevin7@gmail.com.
+Isian final terverifikasi sebelum submit: Email ariandikevin7@gmail.com · Service Name "Mint Safety Verdict" · Website https://mint-safety-verdict.fly.dev · Description sesuai draf di bawah · Primary Service Category "Financial Analysis" (opsi persis FINANCIAL_ANALYSIS tidak ada di formulir) · Number of Endpoints 4 · Pricing Model pay-per-call USDC via x402 ($0,001 /check, $0,05 /verdict, gratis /openapi.json + /health) · Contact Name Kevin Geordio · Endpoints Documentation URL https://mint-safety-verdict.fly.dev/openapi.json · Marketing Authorization **No** (keputusan agent: tidak memberikan hak marketing atas nama Sutan; bisa diubah Sutan lewat trademarks@circle.com) · upload file OpenAPI dilewati (opsional).
+CATATAN AUDIT PENTING: formulir ASLI tidak punya kolom alamat wallet payout — alamat lapak 0x71e921baabf0063f24af7c563dbd4bb7cbde9f8a TIDAK terkirim dan tidak diselipkan ke kolom lain. Kemungkinan Circle memintanya pada tahap review.
+Status sesudah kirim: menunggu review manual Circle; pantauan kemunculan di katalog + Discovery API berjalan harian.
 Formulir: https://forms.gle/7YFzvdmMcn1JH5tF6
 Acuan resmi: developers.circle.com/agent-stack/agent-marketplace/get-listed
 Isi formulir yang diminta dokumen resmi: endpoint URL, alamat wallet payout, deskripsi singkat.
