@@ -61,7 +61,15 @@ boots by cloning this repo, running `npm ci`, and starting the server
 equivalent flyctl config). **Running in MAINNET mode** since 21 Nov 2026
 with the owner's dedicated payout wallet
 `0x71e921baabf0063f24af7c563dbd4bb7cbde9f8a` (machine `msv-main`; the
-testnet machine was destroyed after the switch). Verified from outside:
+testnet machine was destroyed after the switch). **v0.2.0 (21 Nov 2026)**
+added multi-chain analysis: `/check` and `/verdict` accept an optional
+`chain` (56 BSC default, 8453 Base, 1 Ethereum, 42161 Arbitrum, 137
+Polygon); the Agent ID gate and AgenticMint radar stay BSC-only and are
+reported honestly on other chains. Endpoint count stays 4 and prices are
+unchanged, so the submitted marketplace form remains accurate. Verified
+locally with paid testnet calls on all five chains (BSC regression
+identical to v0.1) and from outside after deploy (health shows version
+0.2.0 + the five chain ids, unpaid Base check returns 402). Verified from outside:
 /health shows network=mainnet, /openapi.json 200, unpaid routes return 402
 with mainnet payment requirements (Base etc.) and payTo = payout wallet.
 Testnet phase proof (same URL, before the switch): paid self-pay flow 200
