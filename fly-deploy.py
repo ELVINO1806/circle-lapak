@@ -10,6 +10,7 @@ Usage:
   fly-deploy.py wait <id>  # wait for machine to reach started
 """
 import json
+import os
 import sys
 import urllib.request
 
@@ -56,8 +57,10 @@ MACHINE = {
         "image": "node:22",
         "env": {
             "PORT": "8080",
-            "CIRCLE_NETWORK": "testnet",
-            "SELLER_ADDRESS": "0x79d8E04dB4cb31F6dA2F02f6AdB4FB38e0A8AA54",
+            "CIRCLE_NETWORK": os.environ.get("LAPAK_NETWORK", "testnet"),
+            "SELLER_ADDRESS": os.environ.get(
+                "LAPAK_SELLER", "0x79d8E04dB4cb31F6dA2F02f6AdB4FB38e0A8AA54"
+            ),
         },
         "init": {"cmd": ["bash", "-lc", BOOT], "user": "root"},
         "guest": {"cpu_kind": "shared", "cpus": 1, "memory_mb": 1024},
