@@ -53,15 +53,23 @@ Exit code 2 with `NEED_FAUCET` means the buyer wallet is unfunded.
 
 ## Hosting (live)
 
-Public URL: **https://mint-safety-verdict.fly.dev** (Fly.io app
-`mint-safety-verdict`, org Kevindo Advertise, region sin, machine `msv-1`).
-Deployed via the Machines API with the public `node:22` image; the machine
-boots by cloning this repo, running `npm ci`, and starting the server
-(`fly-deploy.py` in this repo reproduces the launch; `fly.toml` documents the
-equivalent flyctl config). **Running in MAINNET mode** since 21 Nov 2026
-with the owner's dedicated payout wallet
-`0x71e921baabf0063f24af7c563dbd4bb7cbde9f8a` (machine `msv-main`; the
-testnet machine was destroyed after the switch). **v0.2.0 (21 Nov 2026)**
+Public URL: **https://mint-safety-verdict.vercel.app** (Vercel Hobby,
+deployed from this repo; `api/index.mjs` is the serverless entrypoint and
+`vercel.json` rewrites all routes to it; the Express app lives in
+`app.mjs`, `server.mjs` remains the local/self-host entrypoint).
+**Running in MAINNET mode** since 21 Nov 2026 with the owner's dedicated
+payout wallet `0x71e921baabf0063f24af7c563dbd4bb7cbde9f8a` (env
+`CIRCLE_NETWORK=mainnet`, `SELLER_ADDRESS` set in the Vercel project).
+
+History: the service first ran on Fly.io
+(`mint-safety-verdict.fly.dev`, org Kevindo Advertise, region sin) from
+21 Nov 2026. On 23 Nov 2026 the Fly trial ended and the host demanded a
+credit card the owner does not have, so the service migrated to Vercel
+the same day; the marketplace form was resubmitted with the new URL.
+`fly-deploy.py` / `fly.toml` remain in the repo as records of the old
+launch only.
+
+**v0.2.0 (21 Nov 2026)**
 added multi-chain analysis: `/check` and `/verdict` accept an optional
 `chain` (56 BSC default, 8453 Base, 1 Ethereum, 42161 Arbitrum, 137
 Polygon); the Agent ID gate and AgenticMint radar stay BSC-only and are
