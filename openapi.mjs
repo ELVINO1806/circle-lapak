@@ -15,7 +15,7 @@ export const openapi = {
       "plus AgenticMint radar context on BSC (score, unique minters, first seen). Gates that cannot be automated are reported " +
       "as UNKNOWN, never faked as PASS. Payments in USDC via x402 (Circle Gateway nanopayments + vanilla x402).",
   },
-  servers: [{ url: "https://mint-safety-verdict.fly.dev", description: "Production (mainnet payments)" }],
+  servers: [{ url: "https://mint-safety-verdict.vercel.app", description: "Production (mainnet payments)" }],
   paths: {
     "/check": {
       get: {
